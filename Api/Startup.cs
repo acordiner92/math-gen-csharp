@@ -5,11 +5,19 @@ using Microsoft.Extensions.Hosting;
 
 namespace Api
 {
+    using Data;
+    using infrastructure;
+    using Microsoft.EntityFrameworkCore;
+
     public class Startup
     {
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<MathGenDbContext>(
+                options => options.UseNpgsql("Host=localhost;Database=math_gen;Username=postgres;Password=postgres"));
+
+            services.AddHealthChecks().AddCheck<ApiHealthCheck>("api_health_check");
             services.AddControllers();
         }
 
@@ -27,7 +35,11 @@ namespace Api
 
             app.UseAuthorization();
 
-            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHealthChecks("/health");
+                endpoints.MapControllers();
+            });
         }
     }
 }
